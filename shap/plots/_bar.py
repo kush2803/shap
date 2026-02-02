@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scipy
+import collections
 
 from .. import Cohorts, Explanation
 from ..utils import format_value, ordinal_str
@@ -136,8 +137,25 @@ def bar(
         show_data = len(transforms) == 0
 
     # TODO: Rather than just show the "1st token", "2nd token", etc. it would be better to show the "Instance 0's 1st but", etc
-    if issubclass(type(feature_names), str):
-        feature_names = [ordinal_str(i) + " " + feature_names for i in range(len(values[0]))]
+    if isinstance(feature_names, str):
+    feature_names = [f"{ordinal_str(i)} {feature_names}" for i in range(len(values[0]))]
+    
+    elif isinstance(feature_names, collections.abc.Iterable): 
+        unique_features = set(feature_names)
+
+        if len(unique_features) == 1:
+            generic_name = unique_features.pop()
+            feature_names = [f"{ordinal_str(i)} {generic_name}" for i in range(len(values[0]))]
+
+        elif len(feature_names) == len(values[0]):
+            feature_names = list(feature_names)
+        
+        else:
+            raise ValueError("Mismatch between the number of features in the feature list and actual features in the SHAP")
+
+    else:
+    raise TypeError(f"Invalid type for feature_names. Expected str or an iterable, but got {type(feature_names).__name__}")
+    
 
     # build our auto xlabel based on the transform history of the Explanation object
     xlabel = "SHAP value"
